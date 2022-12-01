@@ -1,6 +1,8 @@
 const nodemailer = require("nodemailer");
 
-exports.usuarios_prospectos = function (data) {
+// exports.usuarios_prospectos = function (data) {
+exports.registerNewClientEmail = function (data) {
+  console.log(data)
   // Definimos el transporter
   const transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE,
@@ -141,7 +143,7 @@ exports.usuarios_prospectos = function (data) {
     data.up_rfc +
     `</p>
                           <p><strong>Sitio web: </strong>` +
-    data.up_sitio_web +
+    data.up_datos_b2b.up_sitio_web +
     `</p>
                           <p><strong>Cfdi: </strong>` +
     data.up_cfdi +
@@ -153,16 +155,16 @@ exports.usuarios_prospectos = function (data) {
     data.up_email_facturacion +
     `</p>
                           <p><strong>Forma de pago: </strong>` +
-    data.up_forma_pago +
+    data.up_datos_b2b.up_forma_pago +
     `</p>
                           <p><strong>Medio de pago: </strong>` +
-    data.up_medio_pago +
+    data.up_datos_b2b.up_medio_pago +
     `</p>
                           <p><strong>Banco: </strong>` +
-    data.up_nombre_banco +
+    data.up_datos_b2b.up_nombre_banco +
     `</p>
                           <p><strong>No. cuenta: </strong>` +
-    data.up_numero_cuenta_banco +
+    data.up_datos_b2b.up_numero_cuenta_banco +
     `</p>                          
                       </div>
                       <div class="col-sm"></div>
@@ -263,13 +265,29 @@ exports.usuarios_prospectos = function (data) {
         </body>
     </html>`;
 
-  // Definimos list email test
-  var maillist = [
-    "ov@dielsa.com",
-    "gabriel@puntocommerce.com",
-    "henry@puntocommerce.com",
-    "aymara@puntocommerce.com",
-  ];
+    // Definimos list email test
+    var maillist
+    if(process.env.EMAIL_ENV == "development")
+    {
+        maillist = [
+            "baltazar.ibarra@dielsa.com",
+            "gustavo.arizpe@dielsa.com",
+            "marlen.pena@dielsa.com",
+            "gabriel@puntocommerce.com",
+            "henry@puntocommerce.com",
+            "aymara@puntocommerce.com",
+        ];
+    }
+    else
+    {
+        maillist = [
+            "contacto@dielsa.com",
+            "gabriel@puntocommerce.com",
+            "henry@puntocommerce.com",
+            "aymara@puntocommerce.com",
+        ];
+    }
+
   // Definimos el email
   const mailOptions = {
     from: "no-responder@dielsa.com",

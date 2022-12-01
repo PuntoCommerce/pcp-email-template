@@ -104,7 +104,7 @@ exports.contacto_us = function (data) {
         <section style='background: white; width: 90%; max-width: 800px; margin: 20px auto; text-align: -webkit-center; margin-top: 50px;'>
             <header>
               <div style='color: #0B3196; font-size: 28px; font-weight: 500; letter-spacing: 0; '>
-                <h1>¡Bievenido a Dielsa!</h1>                
+                <h1>¡Bienvenido a Dielsa!</h1>                
               </div>
             </header>
             
@@ -240,15 +240,27 @@ exports.contacto_us = function (data) {
         </body>
     </html>`;
 
-  // Definimos list email test
-  var maillist = [
-    "baltazar.ibarra@dielsa.com",
-    "gustavo.arizpe@dielsa.com",
-    "marlen.pena@dielsa.com",
-    "gabriel@puntocommerce.com",
-    "henry@puntocommerce.com",
-    "aymara@puntocommerce.com",
-  ];
+    // Definimos list email test
+    var maillist
+    if(process.env.EMAIL_ENV == "development")
+    {
+        maillist = [
+            "baltazar.ibarra@dielsa.com",
+            "gustavo.arizpe@dielsa.com",
+            "marlen.pena@dielsa.com",
+            "gabriel@puntocommerce.com",
+            "henry@puntocommerce.com",
+            "aymara@puntocommerce.com",
+        ];
+    }
+    else
+    {
+        maillist = [
+          "contacto@dielsa.com",
+          "marlen.pena@dielsa.com",
+        ];
+    }
+
   // Definimos el email
   const mailOptions = {
     from: "no-responder@dielsa.com",

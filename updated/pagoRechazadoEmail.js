@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 import models from "../models";
-exports.pagoRechazado = async function (email) {
+exports.pagoRechazado = async function (snu_usuario_snu_id) {
   // Definimos el transporter
   const transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE,
@@ -20,6 +20,23 @@ exports.pagoRechazado = async function (email) {
     //maxConnections: 10,
     debug: true,
   });
+
+    const socios_negocio_usuario = await models.SociosNegocioUsuario.findOne({
+      where: {
+        snu_usuario_snu_id: snu_usuario_snu_id,
+      },
+    });
+    var SociosNegocioUsuarioEmail = socios_negocio_usuario.snu_correo_electronico
+
+    const socio_negocio = await models.SociosNegocio.findOne({
+      where: {
+        sn_socios_negocio_id: socios_negocio_usuario.dataValues.snu_sn_socio_de_negocio_id,
+      },
+    });
+
+    var SocioNegocioEmailFacturacion = socio_negocio.sn_email_facturacion
+
+
 
   // Definimos el email
   var htmlBody =
@@ -234,16 +251,28 @@ exports.pagoRechazado = async function (email) {
     </body>
     </html>    
     `;
-    
+
   // Definimos list email test
-  var maillist = [
-    "baltazar.ibarra@dielsa.com",
-    "gustavo.arizpe@dielsa.com",
-    "marlen.pena@dielsa.com",
-    "gabriel@puntocommerce.com",
-    "henry@puntocommerce.com",
-    "aymara@puntocommerce.com",
-  ];
+  var maillist
+  if(process.env.EMAIL_ENV == "development")
+  {
+      maillist = [
+          "baltazar.ibarra@dielsa.com",
+          "gustavo.arizpe@dielsa.com",
+          "marlen.pena@dielsa.com",
+          "gabriel@puntocommerce.com",
+          "henry@puntocommerce.com",
+          "aymara@puntocommerce.com",
+      ];
+  }
+  else
+  {
+      maillist = [
+          SociosNegocioUsuarioEmail,
+          SocioNegocioEmailFacturacion
+      ];
+  }
+
   // Definimos el email
   const mailOptions = {
     from: "no-responder@dielsa.com",

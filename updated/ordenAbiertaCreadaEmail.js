@@ -31,6 +31,15 @@ exports.ordenAbiertaCreadaEmail = async function (order_id) {
     var correo_facturacion = constSociosNegocio.sn_email_facturacion;
     var cardcode = constSociosNegocio.sn_cardcode;
 
+    //-----------------------------------------------------------------    //-----------------------------------------------------------------
+    //Datos usuario sn venta
+    const constSociosNegocioUsuario = await models.SociosNegocioUsuario.findOne({
+      where: {
+        snu_usuario_snu_id: constCompraFinalizada.cf_snu_usuario_snu_id
+      },
+    });
+
+    var SociosNegocioUsuarioEmail = constSociosNegocioUsuario.snu_correo_electronico
     //-----------------------------------------------------------------
     // Datos de entrega
     var estadoValor;
@@ -730,14 +739,26 @@ exports.ordenAbiertaCreadaEmail = async function (order_id) {
       `;
 
     // Definimos list email test
-    var maillist = [
-      "baltazar.ibarra@dielsa.com",
-      "gustavo.arizpe@dielsa.com",
-      "marlen.pena@dielsa.com",
-      "gabriel@puntocommerce.com",
-      "henry@puntocommerce.com",
-      "aymara@puntocommerce.com",
-    ];
+    var maillist
+    if(process.env.EMAIL_ENV == "development")
+    {
+        maillist = [
+            "baltazar.ibarra@dielsa.com",
+            "gustavo.arizpe@dielsa.com",
+            "marlen.pena@dielsa.com",
+            "gabriel@puntocommerce.com",
+            "henry@puntocommerce.com",
+            "aymara@puntocommerce.com",
+        ];
+    }
+    else
+    {
+        maillist = [
+            "ov@dielsa.com",
+            SociosNegocioUsuarioEmail
+        ];
+    }
+
     // Definimos el email
     const mailOptions = {
       from: "no-responder@dielsa.com",

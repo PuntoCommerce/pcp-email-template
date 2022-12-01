@@ -752,20 +752,32 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
       `;
 
     // Definimos list email test
-    var maillist = [
-      "baltazar.ibarra@dielsa.com",
-      "gustavo.arizpe@dielsa.com",
-      "marlen.pena@dielsa.com",
-      "gabriel@puntocommerce.com",
-      "henry@puntocommerce.com",
-      "aymara@puntocommerce.com",
-    ];
+    var maillist
+    if(process.env.EMAIL_ENV == "development")
+    {
+        maillist = [
+            "baltazar.ibarra@dielsa.com",
+            "gustavo.arizpe@dielsa.com",
+            "marlen.pena@dielsa.com",
+            "gabriel@puntocommerce.com",
+            "henry@puntocommerce.com",
+            "aymara@puntocommerce.com",
+        ];
+    }
+    else
+    {
+        maillist = [
+            "ov@dielsa.com",
+        ];
+    }
+
+    
     // Definimos el email
     const mailOptions = {
       from: "no-responder@dielsa.com",
       to: maillist,
       // to: constSociosNegocio.sn_email_facturacion,
-      subject: "Pago aceptado",
+      subject: "Nuevo Pedido Dielsa.com",
       html: htmlBody,
     };
     // Enviamos el email

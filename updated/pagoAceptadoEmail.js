@@ -4,23 +4,53 @@ const { Op } = require("sequelize");
 import { Sequelize } from "sequelize";
 const sequelize = new Sequelize(process.env.POSTGRESQL);
 import date_and_time from "date-and-time";
+import getCheckout from "../services/checkoutAPI";
+const sortJSON = function (data, key, orden) {
+  return data.sort(function (a, b) {
+    var x = a[key],
+      y = b[key];
 
-exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
+    if (orden === "asc") {
+      return x < y ? -1 : x > y ? 1 : 0;
+    }
+
+    if (orden === "desc") {
+      return x > y ? -1 : x < y ? 1 : 0;
+    }
+  });
+};
+exports.pagoAceptado = async function (
+  email,
+  id_usuario_socio,
+  orden,
+  checkout
+) {
   try {
     //Compra Finalizada order information
-    const constCompraFinalizada = await models.CompraFinalizada.findOne({
-      where: {
-        cf_compra_finalizada_id: orden,
-      },
-    });
+    // const constCompraFinalizada = await models.CompraFinalizada.findOne({
+    //   where: {
+    //     cf_compra_numero_orden: orden,
+    //   },
+    // });
+
+    //Compra Finalizada order information
+    // const constCompraFinalizada = await models.CompraFinalizada.findOne({
+    //   where: {
+    //     cf_compra_numero_orden: orden,
+    //   },
+    // });
+
+    // console.log(constCompraFinalizada)
+
+    console.log(888888888)
+    console.log(checkout.dataValues.cdc_sn_socio_de_negocio_id);
 
     //-----------------------------------------------------------------
     // Datos personales
     //Compra Finalizada order information
     const constSociosNegocio = await models.SociosNegocio.findOne({
       where: {
-        sn_socios_negocio_id:
-          constCompraFinalizada.cf_vendido_a_socio_negocio_id,
+        sn_socios_negocio_id: checkout.dataValues.cdc_sn_socio_de_negocio_id,
       },
     });
 
@@ -43,7 +73,7 @@ exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
     const constControlMaestroMultipleTipoEnvio =
       await models.ControlMaestroMultiple.findOne({
         where: {
-          cmm_control_id: constCompraFinalizada.cf_cmm_tipo_envio_id,
+          cmm_control_id: checkout.dataValues.cdc_cmm_tipo_envio_id,
         },
       });
 
@@ -55,7 +85,7 @@ exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
       //Buscar direccion de recoleccion
       const constAlmaceness = await models.Almacenes.findOne({
         where: {
-          alm_almacen_id: constCompraFinalizada.cf_alm_almacen_recoleccion,
+          alm_almacen_id: checkout.dataValues.cdc_alm_almacen_recoleccion,
         },
       });
 
@@ -97,12 +127,12 @@ exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
       codigo_postal = "Cp. " + constRawAlmacenes.codigoPostal;
     } else {
       //Generar Direccin de envio
-      if (constCompraFinalizada.cf_direccion_envio_id) {
+      if (checkout.dataValues.cdc_direccion_envio_id) {
         //Buscar direccion de envio
         const constSociosNegocioDirecciones =
           await models.SociosNegocioDirecciones.findOne({
             where: {
-              snd_direcciones_id: constCompraFinalizada.cf_direccion_envio_id,
+              snd_direcciones_id: checkout.dataValues.cdc_direccion_envio_id,
             },
           });
 
@@ -156,17 +186,17 @@ exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
 
     //Metodo de pago
     var metodo_de_pago;
-    if (constCompraFinalizada.cf_sap_forma_pago_codigo == "99") {
+    if (checkout.dataValues.cdc_forma_pago_codigo == "99") {
       metodo_de_pago = "Mi Credito Con Dielsa";
-    } else if (constCompraFinalizada.cf_sap_forma_pago_codigo == "05") {
+    } else if (checkout.dataValues.cdc_forma_pago_codigo == "05") {
       metodo_de_pago = "Transferencia Bancaria";
-    } else if (constCompraFinalizada.cf_sap_forma_pago_codigo == "04") {
+    } else if (checkout.dataValues.cdc_forma_pago_codigo == "04") {
       metodo_de_pago = "Tarjeta De Crédito";
-    } else if (constCompraFinalizada.cf_sap_forma_pago_codigo == "28") {
+    } else if (checkout.dataValues.cdc_forma_pago_codigo == "28") {
       metodo_de_pago = "Tarjeta De Débito";
     }
 
-    var totalCompra = constCompraFinalizada.cf_total_compra;
+    var totalCompra = checkout.dataValues.TotalFinal;
 
     var formatter = new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -178,10 +208,10 @@ exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
     //-----------------------------------------------------------------
     //Informacion final de pago
 
-    var subTotal = constCompraFinalizada.cf_orden_subtotal;
-    var orderIVA = constCompraFinalizada.cf_order_iva;
-    var costoEnvio = constCompraFinalizada.cf_orden_gastos_envio;
-    var descuentos = constCompraFinalizada.cf_orden_descuento;
+    var subTotal = checkout.dataValues.precioTotal;
+    var orderIVA = checkout.dataValues.TotalImpuesto;
+    var costoEnvio = parseFloat(checkout.dataValues.cdc_costo_envio.toFixed(2));
+    var descuentos = checkout.dataValues.totalDescuentos;
 
     subTotal = formatter.format(subTotal);
     orderIVA = formatter.format(orderIVA);
@@ -199,13 +229,15 @@ exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
         snu_usuario_snu_id: id_usuario_socio,
       },
     });
+    var SociosNegocioUsuarioEmail = socios_negocio_usuario.snu_correo_electronico
 
     const socio_negocio = await models.SociosNegocio.findOne({
       where: {
-        sn_socios_negocio_id:
-          socios_negocio_usuario.dataValues.snu_sn_socio_de_negocio_id,
+        sn_socios_negocio_id: socios_negocio_usuario.dataValues.snu_sn_socio_de_negocio_id,
       },
     });
+
+    var SocioNegocioEmailFacturacion = socio_negocio.sn_email_facturacion
 
     let datos_comprador = "";
     datos_comprador +=
@@ -274,8 +306,8 @@ exports.pagoAceptado = async function (email, id_usuario_socio, orden) {
 <head>
 <title>Pago aceptado</title>
 <link href="` +
-process.env.BACK_LINK +
-`/recursos/bootstrap.min.css" rel="stylesheet">
+      process.env.BACK_LINK +
+      `/recursos/bootstrap.min.css" rel="stylesheet">
 <style type="text/css">
   @font-face {
     font-family: 'Centrale Sans Medium';
@@ -345,7 +377,9 @@ process.env.BACK_LINK +
 </head>
 <body>
 <header class="header_logo">
-  <img src='` + process.env.BACK_LINK + `/recursos/logo.png' / style='max-height: 70px; margin-top: 10px; margin: auto'>          
+  <img src='` +
+      process.env.BACK_LINK +
+      `/recursos/logo.png' / style='max-height: 70px; margin-top: 10px; margin: auto'>
 </header>
 
     <section style='background: white; width: 90%; max-width: 800px; margin: 20px auto; text-align: -webkit-center; margin-top: 50px;'>
@@ -443,144 +477,246 @@ process.env.BACK_LINK +
                         <div style='color: #0B3196; font-size: 18px; font-weight: 600; letter-spacing: 0; line-height: 20px; text-align: justify; margin-bottom: 20px'>
                         `;
 
-    const constProductoCompraFinalizada =
-      await models.ProductoCompraFinalizada.findAll({
-        where: {
-          pcf_cf_compra_finalizada_id: orden,
-        },
-        order: [["pcf_fecha_entrega", "ASC"]],
-        attributes: [
-          "pcf_prod_producto_id",
-          "pcf_fecha_entrega",
-          "pcf_cantidad_producto",
-          "pcf_precio",
-          "pcf_producto_compra_finalizada_id",
-          "pcf_cantidad_entregada",
-        ],
-      });
+    // const constProductoCarritoDeCompra = await models.ProductoCarritoDeCompra.findAll({
+    //     where: {
+    //       pcf_cf_compra_finalizada_id: orden,
+    //     },
+    //     order: [["pcf_fecha_entrega", "ASC"]]
+    //     // attributes: [
+    //     //   "pcf_prod_producto_id",
+    //     //   "pcf_fecha_entrega",
+    //     //   "pcf_cantidad_producto",
+    //     //   "pcf_precio",
+    //     //   "pcf_producto_compra_finalizada_id",
+    //     //   "pcf_cantidad_entregada",
+    //     // ],
+    //   });
 
-    const ConstCorreos = await models.Correos.findAll({
-      where: {
-        cor_pcf_cf_compra_finalizada_id: orden,
-        cor_cmm_tipo_correo: 1000192,
-      },
-    });
+    console.log(11111111111);
+    var lineasTemporales =
+      await getCheckout.getLineasProductosComprasFinalizadas(checkout, 1);
 
+    for (var i = 0; i < lineasTemporales.length; i++) {
+      //Fecha de entrega informacion
+      var dateFinal;
+      var day = new Date();
+
+      var defined = false;
+      if (
+        typeof lineasTemporales[i].pcf_recoleccion_resurtimiento !== "undefined"
+      ) {
+        defined = true;
+      }
+
+      if (defined == true) {
+        console.log(1111111);
+        var dayLetters = date_and_time.format(day, "dddd");
+
+        var AddingsDays = 0;
+        switch (dayLetters) {
+          case "Monday":
+            AddingsDays = 9;
+            break;
+
+          case "Tuesday":
+            AddingsDays = 8;
+            break;
+
+          case "Wednesday":
+            AddingsDays = 7;
+            break;
+
+          case "Thursday":
+            AddingsDays = 6;
+            break;
+
+          case "Friday":
+            AddingsDays = 5;
+            break;
+
+          case "Saturday":
+            AddingsDays = 4;
+            break;
+
+          case "Sunday":
+            AddingsDays = 3;
+            break;
+        }
+        var nuevoDia = date_and_time.addDays(day, AddingsDays);
+        nuevoDia = date_and_time.addHours(nuevoDia, -5);
+
+        dateFinal = date_and_time.format(nuevoDia, "YYYY/MM/DD");
+      } else if (lineasTemporales[i].pcf_dias_resurtimiento > 0) {
+        console.log(22222);
+        var nuevoDia = date_and_time.addDays(
+          day,
+          lineasTemporales[i].pcf_dias_resurtimiento + 1
+        );
+        nuevoDia = date_and_time.addHours(nuevoDia, -5);
+
+        dateFinal = date_and_time.format(nuevoDia, "YYYY/MM/DD");
+      } else if (
+        checkout.dataValues.cdc_politica_envio_surtir_un_solo_almacen ==
+          false &&
+        checkout.dataValues.cdc_politica_envio_nombre != null
+      ) {
+        console.log(999999);
+        var dayLetters = date_and_time.format(day, "dddd");
+
+        var AddingsDays = 0;
+        switch (dayLetters) {
+          case "Monday":
+            AddingsDays = 9;
+            break;
+
+          case "Tuesday":
+            AddingsDays = 8;
+            break;
+
+          case "Wednesday":
+            AddingsDays = 7;
+            break;
+
+          case "Thursday":
+            AddingsDays = 13;
+            break;
+
+          case "Friday":
+            AddingsDays = 12;
+            break;
+
+          case "Saturday":
+            AddingsDays = 11;
+            break;
+
+          case "Sunday":
+            AddingsDays = 10;
+            break;
+        }
+        var nuevoDia = date_and_time.addDays(day, AddingsDays);
+        nuevoDia = date_and_time.addHours(nuevoDia, -5);
+
+        dateFinal = date_and_time.format(nuevoDia, "YYYY/MM/DD");
+      } else {
+        console.log(333333);
+        var nuevoDia = date_and_time.addDays(day, 1);
+        nuevoDia = date_and_time.addHours(nuevoDia, -5);
+
+        dateFinal = date_and_time.format(nuevoDia, "YYYY/MM/DD");
+      }
+
+      lineasTemporales[i].dateFinal = dateFinal;
+    }
+
+    console.log(lineasTemporales);
+
+    console.log(666555444);
+
+    var principalTemp = sortJSON(lineasTemporales, "dateFinal", "asc");
     var fecha_actual;
 
-    for (var x = 0; x < constProductoCompraFinalizada.length; x++) {
-      for (var f = 0; f < ConstCorreos.length; f++) {
-        if (
-          constProductoCompraFinalizada[x].dataValues
-            .pcf_producto_compra_finalizada_id ==
-          ConstCorreos[f].dataValues.cor_pcf_producto_compra_finalizada_id
-        ) {
-          const constProducto = await models.Producto.findOne({
-            where: {
-              prod_producto_id:
-                constProductoCompraFinalizada[x].dataValues
-                  .pcf_prod_producto_id,
-            },
-            attributes: ["prod_nombre", "prod_nombre_extranjero"],
-          });
+    console.log(999888777);
 
-          const constImagenProducto = await models.ImagenProducto.findOne({
-            where: {
-              imgprod_prod_producto_id:
-                constProductoCompraFinalizada[x].dataValues
-                  .pcf_prod_producto_id,
-            },
-            order: [["imgprod_nombre_archivo", "ASC"]],
-          });
+    for (var x = 0; x < lineasTemporales.length; x++) {
+      const constProducto = await models.Producto.findOne({
+        where: {
+          prod_producto_id: lineasTemporales[x].pcf_prod_producto_id,
+        },
+        attributes: ["prod_nombre", "prod_nombre_extranjero"],
+      });
 
-          var imagen;
-          var prod_nombre = constProducto.prod_nombre;
-          var prod_nombre_foraneo = constProducto.prod_nombre_extranjero;
-          var cantidad =
-            constProductoCompraFinalizada[x].dataValues.pcf_cantidad_entregada;
-          var precio = constProductoCompraFinalizada[x].dataValues.pcf_precio;
-          precio = formatter.format(precio);
+      const constImagenProducto = await models.ImagenProducto.findOne({
+        where: {
+          imgprod_prod_producto_id: lineasTemporales[x].pcf_prod_producto_id,
+        },
+        order: [["imgprod_nombre_archivo", "ASC"]],
+      });
 
-          if (constImagenProducto) {
-            imagen = constImagenProducto.imgprod_ruta_archivo;
-            imagen = imagen.split("./public");
-            imagen = imagen[1];
-            imagen = process.env.BACK_LINK + imagen;
-          } else {
-            imagen =
-              "http://wws.com.pa/wp-content/plugins/wordpress-ecommerce/marketpress-includes/images/default-product.png";
-          }
+      console.log(44444444);
+      var imagen;
+      var prod_nombre = constProducto.prod_nombre;
+      var prod_nombre_foraneo = constProducto.prod_nombre_extranjero;
+      var cantidad = lineasTemporales[x].pcf_cantidad_entregada;
+      var precio = lineasTemporales[x].pcf_precio;
+      precio = formatter.format(precio);
 
-          var fecha_temp = date_and_time.format(
-            constProductoCompraFinalizada[x].dataValues.pcf_fecha_entrega,
-            "YYYY/MM/DD"
-          );
+      if (constImagenProducto) {
+        imagen = constImagenProducto.imgprod_ruta_archivo;
+        imagen = imagen.split("./public");
+        imagen = imagen[1];
+        imagen = process.env.BACK_LINK + imagen;
+      } else {
+        imagen =
+          "http://wws.com.pa/wp-content/plugins/wordpress-ecommerce/marketpress-includes/images/default-product.png";
+      }
 
-          //Para hacer tabla de productos y envios
-          if (fecha_actual == fecha_temp) {
-            htmlBody += `<p>Entregado el ` + fecha_actual + `</p>`;
+      console.log(54321);
+      var fecha_temp = dateFinal;
+      console.log(12345);
 
-            htmlBody +=
-              ` 
-                                  <div style='color: #444444; vertical-align: top; font-weight: 400; padding: 5px;'>
-                                    <div style='width: 15%; display: inline-block; vertical-align: top;'>
-                                      <img src='` +
-              imagen +
-              `' style='width: 100%;' />
-                                    </div>
-                                    <div style='display: inline-block; width: 70%; margin-left: 5%;'>
-                                      <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              prod_nombre +
-              `</p>
-                                      <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              prod_nombre_foraneo +
-              `</p>
-                                      <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              cantidad +
-              ` piezas</p>
-                                      <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              precio +
-              `</p>
-                                    </div>
-                                  </div>
-                                        `;
-          } else {
-            fecha_actual = fecha_temp;
+      //Para hacer tabla de productos y envios
+      if (fecha_actual == fecha_temp) {
+        htmlBody += `<p>Entregado el ` + fecha_actual + `</p>`;
 
-            if (x != 0) {
-              htmlBody += `<hr>`;
-            }
+        htmlBody +=
+          ` 
+                              <div style='color: #444444; vertical-align: top; font-weight: 400; padding: 5px;'>
+                                <div style='width: 15%; display: inline-block; vertical-align: top;'>
+                                  <img src='` +
+          imagen +
+          `' style='width: 100%;' />
+                                </div>
+                                <div style='display: inline-block; width: 70%; margin-left: 5%;'>
+                                  <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          prod_nombre +
+          `</p>
+                                  <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          prod_nombre_foraneo +
+          `</p>
+                                  <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          cantidad +
+          ` piezas</p>
+                                  <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          precio +
+          `</p>
+                                </div>
+                              </div>
+                                    `;
+      } else {
+        fecha_actual = fecha_temp;
 
-            if (isRecoleccion == true) {
-              htmlBody += `<p>Recolectar para el día ` + fecha_actual + `</p>`;
-            } else {
-              htmlBody += `<p>Enviando para el ` + fecha_actual + `</p>`;
-            }
-
-            htmlBody +=
-              ` <div style='color: #444444; vertical-align: top; font-weight: 400; padding: 5px;'>
-                  <div style='width: 15%; display: inline-block; vertical-align: top;'>
-                    <img src='` +
-              imagen +
-              `' style='width: 100%;' />
-                  </div>
-                  <div style='display: inline-block; width: 70%; margin-left: 5%;'>
-                    <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              prod_nombre +
-              `</p>
-                    <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              prod_nombre_foraneo +
-              `</p>
-                    <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              cantidad +
-              `</p>
-                    <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
-              precio +
-              `</p>
-                  </div>
-                </div>`;
-          }
+        if (x != 0) {
+          htmlBody += `<hr>`;
         }
+
+        if (isRecoleccion == true) {
+          htmlBody += `<p>Recolectar para el día ` + fecha_actual + `</p>`;
+        } else {
+          htmlBody += `<p>Enviando para el ` + fecha_actual + `</p>`;
+        }
+
+        htmlBody +=
+          ` <div style='color: #444444; vertical-align: top; font-weight: 400; padding: 5px;'>
+              <div style='width: 15%; display: inline-block; vertical-align: top;'>
+                <img src='` +
+          imagen +
+          `' style='width: 100%;' />
+              </div>
+              <div style='display: inline-block; width: 70%; margin-left: 5%;'>
+                <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          prod_nombre +
+          `</p>
+                <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          prod_nombre_foraneo +
+          `</p>
+                <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          cantidad +
+          `</p>
+                <p style='font-size: 18px; line-height: 16px; text-align: justify; margin-top: 0px; margin-bottom: 10px;'>` +
+          precio +
+          `</p>
+              </div>
+            </div>`;
       }
     }
 
@@ -724,21 +860,35 @@ process.env.BACK_LINK +
   </body>    
 </html>
     `;
+    console.log(99999999999)
 
     // Definimos list email test
-    var maillist = [
-      "baltazar.ibarra@dielsa.com",
-      "gustavo.arizpe@dielsa.com",
-      "marlen.pena@dielsa.com",
-      "gabriel@puntocommerce.com",
-      "henry@puntocommerce.com",
-      "aymara@puntocommerce.com",
-    ];
+    var maillist
+    if(process.env.EMAIL_ENV == "development")
+    {
+        maillist = [
+            "baltazar.ibarra@dielsa.com",
+            "gustavo.arizpe@dielsa.com",
+            "marlen.pena@dielsa.com",
+            "gabriel@puntocommerce.com",
+            "henry@puntocommerce.com",
+            "aymara@puntocommerce.com",
+        ];
+    }
+    else
+    {
+        maillist = [
+            SociosNegocioUsuarioEmail,
+            correo_facturacion
+        ];
+    }
+
+
+
     // Definimos el email
     const mailOptions = {
       from: "no-responder@dielsa.com",
       to: maillist,
-      // to: constSociosNegocio.sn_email_facturacion,
       subject: "Pago aceptado",
       html: htmlBody,
     };
