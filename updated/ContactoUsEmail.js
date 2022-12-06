@@ -104,7 +104,7 @@ exports.contacto_us = function (data) {
         <section style='background: white; width: 90%; max-width: 800px; margin: 20px auto; text-align: -webkit-center; margin-top: 50px;'>
             <header>
               <div style='color: #0B3196; font-size: 28px; font-weight: 500; letter-spacing: 0; '>
-                <h1>¡Bienvenido a Dielsa!</h1>                
+                <h1>Te informamos que se envió un mensaje desde el sitio web.</h1>                
               </div>
             </header>
             
@@ -266,7 +266,7 @@ exports.contacto_us = function (data) {
     from: "no-responder@dielsa.com",
     to: maillist,
     // to: constSociosNegocio.sn_email_facturacion,
-    subject: "Contáctanos",
+    subject: "Contacto sitio web",
     html: htmlBody,
   };
   // Enviamos el email
