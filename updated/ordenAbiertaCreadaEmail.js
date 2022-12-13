@@ -754,7 +754,6 @@ exports.ordenAbiertaCreadaEmail = async function (order_id) {
     else
     {
         maillist = [
-            "ov@dielsa.com",
             SociosNegocioUsuarioEmail
         ];
     }
