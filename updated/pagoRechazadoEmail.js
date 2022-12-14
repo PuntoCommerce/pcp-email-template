@@ -268,6 +268,7 @@ exports.pagoRechazado = async function (snu_usuario_snu_id) {
   else
   {
       maillist = [
+          "pagos@dielsa.com",
           SociosNegocioUsuarioEmail,
           SocioNegocioEmailFacturacion
       ];
