@@ -878,6 +878,7 @@ exports.pagoAceptado = async function (
     else
     {
         maillist = [
+            "pagos@dielsa.com",
             SociosNegocioUsuarioEmail,
             correo_facturacion
         ];
