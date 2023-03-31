@@ -183,6 +183,27 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
     totalCompra = formatter.format(totalCompra);
 
     //-----------------------------------------------------------------
+    //Orden de compra
+    
+    const orden_de_compra = await models.OrdenDeCompra.findOne({
+      where:{
+          odc_numero_orden: constCompraFinalizada.cf_compra_numero_orden,
+      },
+      attributes: {
+          exclude: [
+              "odc_orden_de_compra_id",
+              "odc_numero_orden",
+              "odc_usu_usuario_creador_id",
+              'createdAt',
+              'updatedAt'
+          ]
+      },
+    });
+    let ordenCompraUrl = !!orden_de_compra ? 
+                          orden_de_compra.odc_ruta_archivo.split("./public")[1]
+                          : "";
+
+    //-----------------------------------------------------------------
     //Informacion final de pago
 
     var subTotal = constCompraFinalizada.cf_orden_subtotal;
@@ -430,12 +451,24 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
                   
 
               </div>
-              <div style='color: #000000; font-size: 16px; letter-spacing: 0; line-height: 20px; padding-bottom: 50px; text-align: -webkit-left'>
-                <div class='contenido1'>
+              <div style='color: #000000; font-size: 16px; letter-spacing: 0; line-height: 20px; padding-bottom: 10px; text-align: -webkit-left'>
+              <div class='contenido1'>
                 </div>
                       <p>¡Gracias por comprar con nosotros!</p>
-              </div>
-              <div style='border-bottom: 1px solid #000; padding-right: 15px;'>
+              </div>`;
+
+
+            if(!!ordenCompraUrl) {
+              htmlBody += 
+              `<div style='color: #000000; font-size: 16px; letter-spacing: 0; line-height: 20px; padding-bottom: 50px; text-align: -webkit-left'>
+                <div class='contenido1'>
+                </div>
+                  <p><a href="${process.env.BACK_LINK + ordenCompraUrl}">Ver orden de compra</a></p>
+              </div>`
+            }
+
+    htmlBody +=
+              `<div style='border-bottom: 1px solid #000; padding-right: 15px;'>
                 <div style='color: #0B3196; font-size: 18px; font-weight: 600; letter-spacing: 0; line-height: 20px; text-align: justify;'>
                 <div class='contenidos'>
                 </div>`;
@@ -762,6 +795,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
             "gabriel@puntocommerce.com",
             "henry@puntocommerce.com",
             "aymara@puntocommerce.com",
+            "eduardo@puntocommerce.com",
         ];
     }
     else
