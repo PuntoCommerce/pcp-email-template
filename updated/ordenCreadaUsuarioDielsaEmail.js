@@ -199,7 +199,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
           ]
       },
     });
-    let ordenCompraUrl = !!orden_de_compra ? 
+    let ordenCompraUrl = orden_de_compra ? 
                           orden_de_compra.odc_ruta_archivo.split("./public")[1]
                           : "";
 
@@ -299,7 +299,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
 
           .btnGotoOrder{
             font-size: 12px;
-            color: #ffffff;
+            color: #ffffff !important;
             background-color: #0B3196;
             padding: 7px 10px;
             border-radius: 3px;
