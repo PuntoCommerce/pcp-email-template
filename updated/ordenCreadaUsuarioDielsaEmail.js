@@ -199,7 +199,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
           ]
       },
     });
-    let ordenCompraUrl = !!orden_de_compra ? 
+    let ordenCompraUrl = orden_de_compra ? 
                           orden_de_compra.odc_ruta_archivo.split("./public")[1]
                           : "";
 
@@ -299,7 +299,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
 
           .btnGotoOrder{
             font-size: 12px;
-            color: #ffffff;
+            color: #ffffff !important;
             background-color: #0B3196;
             padding: 7px 10px;
             border-radius: 3px;
@@ -322,7 +322,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
           }
         </style>
       </head>
-      <body style="max-wwidth:375px">
+      <body style="max-width:375px">
         <header class="header_logo">
           <img src='` + process.env.BACK_LINK + `/recursos/logo.png' / style='max-height: 70px; margin-top: 10px; margin: auto'>          
         </header>
@@ -475,7 +475,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
               `<div style='color: #000000; font-size: 16px; letter-spacing: 0; line-height: 20px; padding-bottom: 50px; text-align: -webkit-left'>
                 <div class='contenido1'>
                 </div>
-                  <p><a href="${process.env.BACK_LINK + ordenCompraUrl}">Ver orden de compra</a></p>
+                  <p><a href="`+ process.env.STORE_LINK +`/myprofile">Ver orden de compra</a></p>
               </div>`
             }
 
