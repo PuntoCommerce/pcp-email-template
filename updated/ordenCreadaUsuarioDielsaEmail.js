@@ -246,7 +246,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
         <link href="` +
   process.env.BACK_LINK +
   `/recursos/bootstrap.min.css" rel="stylesheet">
-        <style type="text/css">
+        <style>
           @font-face {
             font-family: 'Centrale Sans Medium';
             font-stretch: normal;
@@ -297,6 +297,15 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
             font-family: helvetica;
           }
 
+          .btnGotoOrder{
+            font-size: 12px;
+            color: #ffffff;
+            background-color: #0B3196;
+            padding: 7px 10px;
+            border-radius: 3px;
+            text-decoration: none;
+          }
+
           @media only screen and (max-width: 504px) {
               body,table,td,p,a,li,blockquote {
               -webkit-text-size-adjust:none !important;
@@ -313,7 +322,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
           }
         </style>
       </head>
-      <body>
+      <body style="max-wwidth:375px">
         <header class="header_logo">
           <img src='` + process.env.BACK_LINK + `/recursos/logo.png' / style='max-height: 70px; margin-top: 10px; margin: auto'>          
         </header>
@@ -326,6 +335,9 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
           <header>
             <div style='color: #0B3196; font-size: 28px; font-weight: 500; letter-spacing: 0; '>
               <h1>Se ha generado un nuevo pedido</h1>                
+            </div>
+            <div>
+                <a class="btnGotoOrder" href="${process.env.BACK_LINK + ordenCompraUrl}">Ver orden de compra</a>
             </div>
           </header>
             
@@ -795,7 +807,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
             "gabriel@puntocommerce.com",
             "henry@puntocommerce.com",
             "aymara@puntocommerce.com",
-            "eduardo@puntocommerce.com",
+            "alfredo@puntocommerce.com"
         ];
     }
     else
