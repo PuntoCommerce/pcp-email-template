@@ -322,7 +322,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
           }
         </style>
       </head>
-      <body style="max-wwidth:375px">
+      <body style="max-width:375px">
         <header class="header_logo">
           <img src='` + process.env.BACK_LINK + `/recursos/logo.png' / style='max-height: 70px; margin-top: 10px; margin: auto'>          
         </header>
