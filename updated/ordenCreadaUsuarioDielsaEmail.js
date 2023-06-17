@@ -337,7 +337,7 @@ exports.ordenCreadaUsuarioDielsaEmail = async function (order_id) {
               <h1>Se ha generado un nuevo pedido</h1>                
             </div>
             <div>
-                <a class="btnGotoOrder" href="${process.env.BACK_LINK + ordenCompraUrl}">Ver orden de compra</a>
+                <a class="btnGotoOrder" href="`+ process.env.STORE_LINK +`/myprofile">Ver orden de compra</a>
             </div>
           </header>
             
